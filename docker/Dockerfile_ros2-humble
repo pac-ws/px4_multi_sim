@@ -20,7 +20,7 @@ RUN apt-get	-y update; \
 		gpg \
 		curl \
 		gdb \
-        unzip \
+    unzip \
 		software-properties-common \
 		ca-certificates \
 		lsb-release \
@@ -156,10 +156,10 @@ RUN . /opt/ros/humble/setup.sh && colcon build --packages-select px4_msgs
 
 WORKDIR /home/user
 COPY dotfiles/* /home/user/
-RUN wget https://github.com/AgarwalSaurav/px4-multi-sim/releases/download/rolling/vim.tar.xz
+RUN wget https://github.com/pac-ws/px4_multi_sim/releases/download/rolling/vim.tar.xz
 RUN tar -xvf /home/user/vim.tar.xz -C /home/user/
 
-RUN wget https://github.com/AgarwalSaurav/px4-multi-sim/releases/download/rolling/simulation-gazebo.tar.xz
+RUN wget https://github.com/pac-ws/px4_multi_sim/releases/download/rolling/simulation-gazebo.tar.xz
 RUN tar -xvf /home/user/simulation-gazebo.tar.xz -C /home/user/
 RUN rm /home/user/simulation-gazebo.tar.xz /home/user/vim.tar.xz
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
