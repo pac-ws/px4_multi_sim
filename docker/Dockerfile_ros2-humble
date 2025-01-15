@@ -3,7 +3,7 @@
 # Based from container under https://github.com/osrf/docker_images/tree/master/ros2/source/devel
 #
 
-FROM px4io/px4-dev-simulation-jammy:2024-05-18
+FROM px4io/px4-dev-simulation-jammy:2024-05-18 as base
 LABEL maintainer="Saurav Agarwal <sauravag@upenn.edu>"
 
 # setup environment
@@ -130,6 +130,8 @@ RUN colcon mixin add default \
 		https://raw.githubusercontent.com/colcon/colcon-metadata-repository/master/index.yaml \
 	&& colcon metadata update
 
+FROM base AS dev
+
 RUN git clone https://github.com/eProsima/Micro-XRCE-DDS-Agent.git \
     && mkdir -p Micro-XRCE-DDS-Agent/build \
     && cd Micro-XRCE-DDS-Agent/build \
@@ -156,6 +158,8 @@ RUN wget https://raw.githubusercontent.com/PX4/PX4-gazebo-models/9e47793f2bc18aa
 RUN git clone -b release/1.14 https://github.com/PX4/px4_msgs.git /opt/px4_ws/src/px4_msgs
 WORKDIR /opt/px4_ws
 RUN . /opt/ros/humble/setup.sh && colcon build --packages-select px4_msgs
+
+FROM dev AS final
 
 WORKDIR /home/user
 COPY dotfiles/* /home/user/
