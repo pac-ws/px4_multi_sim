@@ -2,10 +2,15 @@
 # PX4 ROS2 Humble development environment
 # Based from container under https://github.com/osrf/docker_images/tree/master/ros2/source/devel
 #
+ARG CUDA_VERSION="12.6.3"
+ARG UBUNTU_VERSION="22.04"
 
-FROM px4io/px4-dev-simulation-jammy:2024-05-18
+FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu${UBUNTU_VERSION} AS cuda
 LABEL maintainer="Saurav Agarwal <sauravag@upenn.edu>"
 
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 # setup environment
 ENV ROS_DISTRO=humble
 ENV TERM=xterm-256color
@@ -15,56 +20,102 @@ RUN apt-get	-y update; \
 	apt-get -y install \
     apt-utils \
 		build-essential \
+    ant \
+    ccache \
+    bc \
+    cppcheck \
+    binutils-dev \
+    dirmngr \
 		git \
 		wget \
 		gpg \
 		curl \
 		gdb \
+    gettext \
+    gnupg \
+    gosu \
+    lcov \
+    libelf-dev \
+    libexpat-dev \
+    libvecmath-java \
+    libfreetype6-dev \
+    libgtest-dev \
+    libisl-dev \
+    libmpc-dev \
+    libssl-dev \
+    lsb-release \
+    make \
+    openssh-client \
+    openjdk-11-jre \
+    openjdk-11-jdk \
     unzip \
+    zip \
 		software-properties-common \
 		ca-certificates \
 		lsb-release \
+    rsync \
+    screen \
+    shellcheck \
+    tzdata \
+    texinfo \
+    u-boot-tools \
+    util-linux \
+    valgrind \
+    xz-utils \
+    xsltproc \
 		net-tools iputils-ping \
 		locales
 
 # Add repo for installing latest version of cmake
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null; \
+    wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg; \
 		echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ jammy main' | tee /etc/apt/sources.list.d/kitware.list >/dev/null; \
+	  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null; \
 		apt-get update; \
 		rm /usr/share/keyrings/kitware-archive-keyring.gpg \
     && apt-get install -y kitware-archive-keyring \
-    && apt-get install -y cmake
+    && apt-get install -y cmake gcc-multilib g++-multilib
 
 RUN add-apt-repository -y ppa:jonathonf/vim \
     && apt-get update
 
 RUN apt-get -y install \
-        libgmp-dev \
+    libgmp-dev \
 		libmpfr-dev \
 		libboost-all-dev \
 		libeigen3-dev \
-		python3.10 \
-		python3.10-dev \
-		python3.10-venv \
-		python-is-python3 \
+		python3 \
+		python3-dev \
+		python3-venv \
+    python3-pip \
 		libgeos-dev \
 		libyaml-cpp-dev \
 		vim \
     neovim \
 		tmux \
+    doxygen \
 		ffmpeg \
 		gnuplot-nox \
 		ninja-build \
     libpng-dev \
     libjpeg-dev \
-    libopencv-dev \
-    libgl1-mesa-glx \
-    libgl1-mesa-dri \
-    libglu1-mesa \
-    python3-opencv \
     bash-completion \
     dirmngr \
     gnupg2 \
+    gz-garden \
+		gstreamer1.0-plugins-bad \
+		gstreamer1.0-plugins-base \
+		gstreamer1.0-plugins-good \
+		gstreamer1.0-plugins-ugly \
+		libgstreamer-plugins-base1.0-dev \
+		libimage-exiftool-perl \
+		libopencv-dev \
+		libxml2-utils \
+		protobuf-compiler \
+		x-window-system
+
+RUN apt-get -y install \
+    python3-opencv \
     python3-argcomplete \
     python3-flake8 \
     python3-flake8-blind-except \
@@ -75,7 +126,6 @@ RUN apt-get -y install \
     python3-flake8-docstrings \
     python3-flake8-import-order \
     python3-flake8-quotes \
-    python3-pip \
     python3-pytest-cov \
     python3-pytest-mock \
     python3-pytest-repeat \
@@ -83,8 +133,67 @@ RUN apt-get -y install \
     python3-pytest-runner \
     python3-pytest-timeout \
     python3-wheel \
-    python3-empy \
-    python3-lark
+    python3-lark \
+    python3-setuptools \
+    python3-coverage \
+    python3-numpy \
+    python3-cerberus \
+    python3-jinja2 \
+    python3-kconfiglib \
+    python3-matplotlib \
+    python3-pkgconfig \
+    python3-packaging \
+    python3-pytest \
+    python3-requests \
+    python3-serial \
+    python3-six \
+    python3-toml \
+    python3-psutil \
+    python3-lxml \
+    python3-jsonschema \
+    python3-future \
+    python-is-python3
+
+RUN update-alternatives --set java $(update-alternatives --list java | grep "java-11")
+
+RUN cd /usr/src/gtest \
+	&& mkdir build && cd build \
+	&& cmake .. && make -j$(nproc) \
+	&& find . -name \*.a -exec cp {} /usr/lib \; \
+	&& cd .. && rm -rf build
+
+RUN python3 -m pip install empy==3.3.4 argparse pyros-genmsg pyulog nunavut>=1.1.0 pynacl pyyaml
+
+# astyle v3.1
+RUN wget -q https://downloads.sourceforge.net/project/astyle/astyle/astyle%203.1/astyle_3.1_linux.tar.gz -O /tmp/astyle.tar.gz \
+	&& cd /tmp && tar zxf astyle.tar.gz && cd astyle/src \
+	&& make -f ../build/gcc/Makefile -j$(nproc) && cp bin/astyle /usr/local/bin \
+	&& rm -rf /tmp/*
+
+# create user with id 1001 (jenkins docker workflow default)
+RUN useradd --shell /bin/bash -u 1001 -c "" -m user && usermod -a -G dialout user
+
+# setup virtual X server
+RUN mkdir /tmp/.X11-unix && \
+	chmod 1777 /tmp/.X11-unix && \
+	chown -R root:root /tmp/.X11-unix
+ENV DISPLAY :99
+
+ENV CCACHE_UMASK=000
+ENV PATH="/usr/lib/ccache:$PATH"
+
+# SITL UDP PORTS
+EXPOSE 14556/udp
+EXPOSE 14557/udp
+
+# Some QT-Apps/Gazebo don't not show controls without this
+ENV QT_X11_NO_MITSHM=1
+# Use UTF8 encoding in java tools (needed to compile jMAVSim)
+ENV JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
+
+# Install JSBSim
+RUN wget https://github.com/JSBSim-Team/jsbsim/releases/download/v1.1.1a/JSBSim-devel_1.1.1-134.focal.amd64.deb
+RUN dpkg -i JSBSim-devel_1.1.1-134.focal.amd64.deb
 
 RUN add-apt-repository universe
 RUN locale-gen en_US en_US.UTF-8; update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8; export LANG=en_US.UTF-8
@@ -164,14 +273,7 @@ RUN tar -xvf /home/user/vim.tar.xz -C /home/user/
 
 RUN wget https://github.com/pac-ws/px4_multi_sim/releases/download/rolling/simulation-gazebo.tar.xz
 RUN tar -xvf /home/user/simulation-gazebo.tar.xz -C /home/user/
-
-WORKDIR /root
-COPY dotfiles/* /root/
-RUN tar -xvf /home/user/vim.tar.xz -C /root/
-RUN tar -xvf /home/user/simulation-gazebo.tar.xz -C /root/
-
 RUN rm /home/user/simulation-gazebo.tar.xz /home/user/vim.tar.xz
-
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

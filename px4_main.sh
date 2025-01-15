@@ -18,6 +18,7 @@ Options:
   -n, --name <container name>            Specify the container name.
 
   -c, --create                           Create a new container.
+  --cuda                                 Enable CUDA support.
   -b, --bash                             Start an interactive bash shell.
   -x, --xrce                             Start MicroXRCEAgent.
   -s, --sim                              Start Gazebo simulator.
@@ -70,7 +71,7 @@ fi
 
 # Define short and long options
 SHORT_OPTS="d:n:w:xcbshr"
-LONG_OPTS="directory:,name:,world:,help,create,xrce,bash,sim,headless,robots,delete"
+LONG_OPTS="directory:,name:,world:,help,create,cuda,xrce,bash,sim,headless,robots,delete"
 
 # Parse options using getopt
 PARSED_PARAMS=$(getopt -o "$SHORT_OPTS" -l "$LONG_OPTS" -n "$(basename "$0")" -- "$@") || {
@@ -83,12 +84,14 @@ eval set -- "$PARSED_PARAMS"
 # Initialize variables with default values
 WS_DIR=""
 CONTAINER_NAME="px4_main"
+CUDA=false
 CREATE=false
 BASH_MODE=false
 XRCE=false
 SIM=false
 EXEC_MULTIPLE_ROBOTS=false
 HEADLESS=""
+CONTANER_OPTIONS=""
 WORLD="grid"
 # WORLD="simple_baylands"
 EXCLUSIVE_OPTION_COUNT=0
@@ -103,6 +106,10 @@ while true; do
     -n|--name)
       CONTAINER_NAME="$2"
       shift 2
+      ;;
+    --cuda)
+      CUDA=true
+      shift
       ;;
     -c|--create)
       CREATE=true
@@ -164,6 +171,9 @@ elif [[ $EXCLUSIVE_OPTION_COUNT -eq 0 ]]; then
 fi
 
 IMAGE_NAME="agarwalsaurav/px4-dev-ros2-humble:latest"
+# if [[ "$CUDA" == true ]]; then
+#   IMAGE_NAME="agarwalsaurav/px4-dev-ros2-humble:cuda"
+# fi
 PX4_DIR="/opt/px4_ws/src/PX4-Autopilot"
 
 # Ensure robots_execs.sh is executable
@@ -198,9 +208,20 @@ create_container() {
     warning_message "Container '${CONTAINER_NAME}' is already running."
     return 0
   fi
+  # Add gpu support
+  if [[ "$CUDA" == true ]]; then
+    info_message "Enabling GPU support..."
+    CONTANER_OPTIONS="--gpus all"
+    CONTANER_OPTIONS="${CONTANER_OPTIONS} --env NVIDIA_VISIBLE_DEVICES=all"
+    CONTANER_OPTIONS="${CONTANER_OPTIONS} --env NVIDIA_DRIVER_CAPABILITIES=all"
+    # Get group id of video group
+    VIDEO_GID=$(getent group video | cut -d: -f3)
+    RENDER_GID=$(getent group render | cut -d: -f3)
+    CONTANER_OPTIONS="${CONTANER_OPTIONS} --env VIDEO_GID=${VIDEO_GID}"
+    CONTANER_OPTIONS="${CONTANER_OPTIONS} --env RENDER_GID=${RENDER_GID}"
+  fi
   info_message "Creating Docker container '${CONTAINER_NAME}'..."
   docker run -d -it --rm --init --privileged \
-    --device /dev/dri:/dev/dri \
     --env LOCAL_USER_ID="$(id -u)" \
     --env ROS_DOMAIN_ID="${ROS_DOMAIN_ID}" \
     --env PX4_GZ_STANDALONE=1 \
@@ -212,6 +233,7 @@ create_container() {
     --pid=host \
     -v "$(pwd)":/px4_scripts:rw \
     -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
+    ${CONTANER_OPTIONS} \
     ${VOLUME_OPTION} \
     --name="${CONTAINER_NAME}" "${IMAGE_NAME}" bash
 }
@@ -219,7 +241,7 @@ create_container() {
 exec_xrce() {
   if docker ps -q -f name="$CONTAINER_NAME" | grep -q .; then
     info_message "Starting MicroXRCEAgent in container '${CONTAINER_NAME}'..."
-    docker exec -it "${CONTAINER_NAME}" gosu user MicroXRCEAgent udp4 -p 8888
+    docker exec -it "${CONTAINER_NAME}" MicroXRCEAgent udp4 -p 8888
   else 
     warning_message "Container '${CONTAINER_NAME}' is not running. Creating container..."
     create_container
@@ -230,7 +252,7 @@ exec_xrce() {
 exec_bash() {
   if docker ps -q -f name="$CONTAINER_NAME" | grep -q .; then
     info_message "Starting bash shell in container '${CONTAINER_NAME}'..."
-    docker exec -it "${CONTAINER_NAME}" gosu user bash
+    docker exec -it "${CONTAINER_NAME}" bash
   else 
     warning_message "Container '${CONTAINER_NAME}' is not running. Creating container..."
     create_container
@@ -242,7 +264,7 @@ exec_gazebo_sim() {
   xhost +
   if docker ps -q -f name="$CONTAINER_NAME" | grep -q .; then
     info_message "Starting Gazebo simulator in container '${CONTAINER_NAME}'..."
-    docker exec -it "${CONTAINER_NAME}" gosu user python "${PX4_DIR}/Tools/simulation/gz/simulation-gazebo" ${HEADLESS} --world "${WORLD}"
+    docker exec -it "${CONTAINER_NAME}" python "${PX4_DIR}/Tools/simulation/gz/simulation-gazebo" ${HEADLESS} --world "${WORLD}"
   else 
     error_exit "Container '${CONTAINER_NAME}' is not running. Please create the container first."
   fi
@@ -251,7 +273,7 @@ exec_gazebo_sim() {
 exec_multiple_robots() {
   if docker ps -q -f name="$CONTAINER_NAME" | grep -q .; then
     info_message "Launching multiple robots in container '${CONTAINER_NAME}'..."
-    docker exec -it "${CONTAINER_NAME}" gosu user bash /px4_scripts/robots_execs.sh /px4_scripts/robots_poses.sh
+    docker exec -it "${CONTAINER_NAME}" bash /px4_scripts/robots_execs.sh /px4_scripts/robots_poses.sh
   else 
     error_exit "Container '${CONTAINER_NAME}' is not running. Please create the container first."
   fi
