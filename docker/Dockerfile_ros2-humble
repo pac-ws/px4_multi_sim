@@ -58,9 +58,6 @@ RUN apt-get -y install \
     libpng-dev \
     libjpeg-dev \
     libopencv-dev \
-    libgl1-mesa-glx \
-    libgl1-mesa-dri \
-    libglu1-mesa \
     python3-opencv \
     bash-completion \
     dirmngr \
@@ -85,6 +82,8 @@ RUN apt-get -y install \
     python3-wheel \
     python3-empy \
     python3-lark
+
+FROM base AS ros2
 
 RUN add-apt-repository universe
 RUN locale-gen en_US en_US.UTF-8; update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8; export LANG=en_US.UTF-8
@@ -130,7 +129,7 @@ RUN colcon mixin add default \
 		https://raw.githubusercontent.com/colcon/colcon-metadata-repository/master/index.yaml \
 	&& colcon metadata update
 
-FROM base AS dev
+FROM ros2 AS dev
 
 RUN git clone https://github.com/eProsima/Micro-XRCE-DDS-Agent.git \
     && mkdir -p Micro-XRCE-DDS-Agent/build \
