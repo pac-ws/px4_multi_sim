@@ -18,7 +18,7 @@ Options:
   -n, --name <container name>            Specify the container name.
 
   -c, --create                           Create a new container.
-  --cuda                                 Enable CUDA support.
+  --gpu                                  Enable GPU support.
   -b, --bash                             Start an interactive bash shell.
   -x, --xrce                             Start MicroXRCEAgent.
   -s, --sim                              Start Gazebo simulator.
@@ -71,7 +71,7 @@ fi
 
 # Define short and long options
 SHORT_OPTS="d:n:w:xcbshr"
-LONG_OPTS="directory:,name:,world:,help,create,cuda,xrce,bash,sim,headless,robots,delete"
+LONG_OPTS="directory:,name:,world:,help,create,gpu,xrce,bash,sim,headless,robots,delete"
 
 # Parse options using getopt
 PARSED_PARAMS=$(getopt -o "$SHORT_OPTS" -l "$LONG_OPTS" -n "$(basename "$0")" -- "$@") || {
@@ -84,7 +84,7 @@ eval set -- "$PARSED_PARAMS"
 # Initialize variables with default values
 WS_DIR=""
 CONTAINER_NAME="px4_main"
-CUDA=false
+USE_GPU=false
 CREATE=false
 BASH_MODE=false
 XRCE=false
@@ -107,8 +107,8 @@ while true; do
       CONTAINER_NAME="$2"
       shift 2
       ;;
-    --cuda)
-      CUDA=true
+    --gpu)
+      USE_GPU=true
       shift
       ;;
     -c|--create)
@@ -171,7 +171,7 @@ elif [[ $EXCLUSIVE_OPTION_COUNT -eq 0 ]]; then
 fi
 
 IMAGE_NAME="agarwalsaurav/px4-dev-ros2-humble:latest"
-# if [[ "$CUDA" == true ]]; then
+# if [[ "$USE_GPU" == true ]]; then
 #   IMAGE_NAME="agarwalsaurav/px4-dev-ros2-humble:cuda"
 # fi
 PX4_DIR="/opt/px4_ws/src/PX4-Autopilot"
@@ -209,7 +209,7 @@ create_container() {
     return 0
   fi
   # Add gpu support
-  if [[ "$CUDA" == true ]]; then
+  if [[ "$USE_GPU" == true ]]; then
     info_message "Enabling GPU support..."
     CONTANER_OPTIONS="--gpus all"
     CONTANER_OPTIONS="${CONTANER_OPTIONS} --env NVIDIA_VISIBLE_DEVICES=all"
