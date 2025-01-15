@@ -200,18 +200,16 @@ create_container() {
   fi
   info_message "Creating Docker container '${CONTAINER_NAME}'..."
   docker run -d -it --rm --init --privileged \
-    --group-add video \
-    --group-add render \
+    --device /dev/dri:/dev/dri \
     --env LOCAL_USER_ID="$(id -u)" \
     --env ROS_DOMAIN_ID="${ROS_DOMAIN_ID}" \
     --env PX4_GZ_STANDALONE=1 \
     --env PX4_SYS_AUTOSTART=4001 \
     --env PX4_GZ_MODEL=x500 \
-    --env DISPLAY="${DISPLAY:0}" \
+    --env DISPLAY="${DISPLAY:-:0}" \
     --net=host \
     --ipc=host \
     --pid=host \
-    --gpus=all \
     -v "$(pwd)":/px4_scripts:rw \
     -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
     ${VOLUME_OPTION} \

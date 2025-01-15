@@ -20,7 +20,7 @@ if [ -n "${LOCAL_USER_ID}" ]; then
 	echo "Starting with UID : $LOCAL_USER_ID"
 	# modify existing user's id
 	usermod -u $LOCAL_USER_ID user
-  usermod -aG sudo user video render
+  usermod -aG sudo user
   echo "user:user" | chpasswd
   chown -R user /home/user
   chown -R user /opt

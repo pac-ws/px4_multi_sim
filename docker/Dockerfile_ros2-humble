@@ -50,38 +50,41 @@ RUN apt-get -y install \
 		libgeos-dev \
 		libyaml-cpp-dev \
 		vim \
-        neovim \
+    neovim \
 		tmux \
 		ffmpeg \
 		gnuplot-nox \
 		ninja-build \
-        libpng-dev \
-        libjpeg-dev \
-        libopencv-dev \
-        python3-opencv \
-        bash-completion \
-        dirmngr \
-        gnupg2 \
-        python3-argcomplete \
-        python3-flake8 \
-        python3-flake8-blind-except \
-        python3-flake8-builtins \
-        python3-flake8-class-newline \
-        python3-flake8-comprehensions \
-        python3-flake8-deprecated \
-        python3-flake8-docstrings \
-        python3-flake8-import-order \
-        python3-flake8-quotes \
-        python3-pip \
-        python3-pytest-cov \
-        python3-pytest-mock \
-        python3-pytest-repeat \
-        python3-pytest-rerunfailures \
-        python3-pytest-runner \
-        python3-pytest-timeout \
-        python3-wheel \
-        python3-empy \
-        python3-lark
+    libpng-dev \
+    libjpeg-dev \
+    libopencv-dev \
+    libgl1-mesa-glx \
+    libgl1-mesa-dri \
+    libglu1-mesa \
+    python3-opencv \
+    bash-completion \
+    dirmngr \
+    gnupg2 \
+    python3-argcomplete \
+    python3-flake8 \
+    python3-flake8-blind-except \
+    python3-flake8-builtins \
+    python3-flake8-class-newline \
+    python3-flake8-comprehensions \
+    python3-flake8-deprecated \
+    python3-flake8-docstrings \
+    python3-flake8-import-order \
+    python3-flake8-quotes \
+    python3-pip \
+    python3-pytest-cov \
+    python3-pytest-mock \
+    python3-pytest-repeat \
+    python3-pytest-rerunfailures \
+    python3-pytest-runner \
+    python3-pytest-timeout \
+    python3-wheel \
+    python3-empy \
+    python3-lark
 
 RUN add-apt-repository universe
 RUN locale-gen en_US en_US.UTF-8; update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8; export LANG=en_US.UTF-8
