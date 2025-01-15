@@ -3,7 +3,7 @@
 # Based from container under https://github.com/osrf/docker_images/tree/master/ros2/source/devel
 #
 
-FROM px4io/px4-dev-simulation-jammy:2024-05-18 as base
+FROM px4io/px4-dev-simulation-jammy:2024-05-18 AS base
 LABEL maintainer="Saurav Agarwal <sauravag@upenn.edu>"
 
 # setup environment
