@@ -14,8 +14,8 @@ while read -r line; do
     fi
 
     line=$(echo "$line" | xargs)
-    read -r id x y <<< "$line"
-    PX4_GZ_MODEL_POSE="${x},${y},0.10,0,0,0" ${PX4_DIR}/build/px4_sitl_default/bin/px4 -i $id > /dev/null &
+    read -r id x y heading <<< "$line"
+    PX4_GZ_MODEL_POSE="${x},${y},0.10,0,0,${heading}" ${PX4_DIR}/build/px4_sitl_default/bin/px4 -i $id > /dev/null &
 
 done < "$filename"
 
