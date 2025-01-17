@@ -16,17 +16,15 @@ Usage: bash $(basename "$0") [OPTIONS]
 Options:
   -d, --directory <workspace directory>  Specify the workspace directory.
   -n, --name <container name>            Specify the container name.
-
   -c, --create                           Create a new container.
-  --gpu                                  Enable GPU support.
+      --gpu                              Enable GPU support.
   -b, --bash                             Start an interactive bash shell.
   -x, --xrce                             Start MicroXRCEAgent.
   -s, --sim                              Start Gazebo simulator.
       --headless                         Run in headless mode (valid only with -s|--sim).
       --world <world name>               Specify the Gazebo world (valid only with -s|--sim).
   -r, --robots                           Launch multiple robots (see robots_execs.sh)
-  --delete                               Delete the container.
-
+      --delete                           Delete the container.
   -h, --help                             Show this help message and exit.
 
 Note:
