@@ -75,7 +75,7 @@ done
 ROS_DOMAIN_ID=10
 CONTAINER_NAME="px4_sim"
 MOUNT_DIR=""
-CONTANER_OPTIONS=""
+CONTAINER_OPTIONS=""
 PX4_SIM_DIR="${PAC_WS}/px4_multi_sim"
 USE_GPU=false
 if [ "$(command -v nvidia-smi)" ]; then
@@ -177,14 +177,14 @@ fi
 # Add gpu support
 if [[ "$USE_GPU" == true ]]; then
   info_message "Enabling GPU support..."
-  CONTANER_OPTIONS="--gpus all"
-  CONTANER_OPTIONS="${CONTANER_OPTIONS} --env NVIDIA_VISIBLE_DEVICES=all"
-  CONTANER_OPTIONS="${CONTANER_OPTIONS} --env NVIDIA_DRIVER_CAPABILITIES=all"
+  CONTAINER_OPTIONS="--gpus all"
+  CONTAINER_OPTIONS="${CONTAINER_OPTIONS} --env NVIDIA_VISIBLE_DEVICES=all"
+  CONTAINER_OPTIONS="${CONTAINER_OPTIONS} --env NVIDIA_DRIVER_CAPABILITIES=all"
   # Get group id of video group
   VIDEO_GID=$(getent group video | cut -d: -f3)
   RENDER_GID=$(getent group render | cut -d: -f3)
-  CONTANER_OPTIONS="${CONTANER_OPTIONS} --env VIDEO_GID=${VIDEO_GID}"
-  CONTANER_OPTIONS="${CONTANER_OPTIONS} --env RENDER_GID=${RENDER_GID}"
+  CONTAINER_OPTIONS="${CONTAINER_OPTIONS} --env VIDEO_GID=${VIDEO_GID}"
+  CONTAINER_OPTIONS="${CONTAINER_OPTIONS} --env RENDER_GID=${RENDER_GID}"
 fi
 info_message "Creating Docker container '${CONTAINER_NAME}'..."
 docker run -d -it --rm --init --privileged \
@@ -200,6 +200,6 @@ docker run -d -it --rm --init --privileged \
   --pid=host \
   -v "${PX4_SIM_DIR}":/px4_scripts:rw \
   -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
-  ${CONTANER_OPTIONS} \
+  ${CONTAINER_OPTIONS} \
   ${VOLUME_OPTION} \
   --name="${CONTAINER_NAME}" "${IMAGE_NAME}" bash

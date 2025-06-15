@@ -89,11 +89,10 @@ fi
 
 # Initialize variables with default values
 CONTAINER_NAME="px4_sim"
-MOUNT_DIR=""
 WORLD="grid"
 # WORLD="simple_baylands"
 HEADLESS=""
-CONTANER_OPTIONS=""
+CONTAINER_OPTIONS=""
 PX4_SIM_DIR="${PAC_WS}/px4_multi_sim"
 USE_GPU=false
 if [ "$(command -v nvidia-smi)" ]; then
@@ -111,14 +110,14 @@ case "$1" in
     docker_cmd "${CONTAINER_NAME}" MicroXRCEAgent udp4 -p 8888
     ;;
   delete)
-    is_container_running
+    is_container_running "${CONTAINER_NAME}"
     docker stop "${CONTAINER_NAME}"
     ;;
   -r|robots)
     docker_cmd "${CONTAINER_NAME}" "/px4_scripts/robots_execs.sh" "/px4_scripts/robots_poses.sh"
     ;;
   -s|sim)
-    xhost +
+    xhost +local:docker
     # Check if the remaining arguments contain world or headless options
     while [[ $# -gt 1 ]]; do
       case "$2" in
@@ -135,7 +134,7 @@ case "$1" in
           ;;
       esac
     done
-    docker_cmd "${CONTAINER_NAME}" 'python "${PX4_DIR}/Tools/simulation/gz/simulation-gazebo" ' --world "${WORLD}" ${HEADLESS}
+    docker_cmd "${CONTAINER_NAME}" "python \"\${PX4_DIR}/Tools/simulation/gz/simulation-gazebo\" --world \"${WORLD}\" ${HEADLESS}"
     ;;
   -h|help)
     print_usage
